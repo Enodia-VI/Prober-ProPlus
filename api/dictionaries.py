@@ -5,20 +5,15 @@ from typing import Any, Literal, Optional, Union
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
-# =============================================================================
 # Richieste API - esecuzione suite legacy
-# =============================================================================
-
 class RunSuiteRequest(BaseModel):
     suite: str
     dns4_server: str
     dns6_server: Optional[str] = None
 
 
-# =============================================================================
-# Modelli per l'output dei Plugin
-# =============================================================================
 
+# Modelli per gestire l'output dei Plugin
 class PluginError(BaseModel):
     code: str
     message: str
@@ -30,10 +25,7 @@ class PluginOutput(BaseModel):
     error: Optional[PluginError] = None
 
 
-# =============================================================================
-# Modelli per i test
-# =============================================================================
-
+# Modello utilizzato per i test
 class AssertionModel(BaseModel):
     op: Literal[
         "equals",
@@ -48,13 +40,6 @@ class AssertionGroup(BaseModel):
     Riflette il formato realmente usato in config.yml e da
     Evaluator.evaluate(): un dict con chiavi opzionali "all"/"any",
     non una lista piatta di assertion.
-
-    NOTA: TestCase non è attualmente usato dal motore di esecuzione
-    (runner.py lavora sui dict grezzi caricati da YAML, senza passare
-    da questo modello). Prima che TestCase venga effettivamente
-    agganciato a una validazione runtime, questo era un mismatch
-    silenzioso: qualunque validazione reale con Pydantic sarebbe
-    fallita perché il formato non corrispondeva a quello di config.yml.
     """
 
     all: Optional[list[AssertionModel]] = None
@@ -97,9 +82,7 @@ class TestCase(BaseModel):
     critical: bool = False
 
 
-# =============================================================================
 # Interfaccia Base astratta dei Plugin
-# =============================================================================
 
 class BasePlugin(ABC):
 
@@ -112,13 +95,9 @@ class BasePlugin(ABC):
         raise NotImplementedError
 
 
-# =============================================================================
-# Modelli per la lista dei nodi DNS
-# =============================================================================
-#
-# Utilizzati dalla macchina Ansible e dal Frontend.
-# =============================================================================
 
+# Modelli per la lista dei nodi DNS
+# (Ansible usage)
 class DnsServerEntry(BaseModel):
     name: str
     ip: str
@@ -133,9 +112,7 @@ class PushDnsServersRequest(BaseModel):
     servers: list[DnsServerEntry]
 
 
-# =============================================================================
 # Target di test ricevuto dalla macchina Ansible
-# =============================================================================
 
 class TestTarget(BaseModel):
     hostname: str = Field(
@@ -194,9 +171,8 @@ class TestTarget(BaseModel):
         return self
 
 
-# =============================================================================
+
 # Richiesta di creazione di un nuovo test job
-# =============================================================================
 
 class TestRunRequest(BaseModel):
     targets: list[TestTarget] = Field(
@@ -231,10 +207,8 @@ class TestRunRequest(BaseModel):
         return value
 
 
-# =============================================================================
-# Risposta alla creazione del job
-# =============================================================================
 
+# Risposta per la creazione del job
 class TestRunAccepted(BaseModel):
     job_id: str
 

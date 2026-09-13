@@ -12,7 +12,7 @@ from typing import Optional
 from fastapi import APIRouter, Header, HTTPException
 
 from api.dictionaries import TestRunAccepted, TestRunRequest
-from config.loader import get_config
+from config.settings import get_config
 from core.security import validate_internal_token
 from jobs.service import create_test_run, get_job
 
@@ -36,16 +36,27 @@ def _build_report_urls(job_id: str) -> dict[str, str]:
     }
 
 
-@router.post( "/api/internal/test-runs", response_model=TestRunAccepted, status_code=202, )
-async def create_test_run_endpoint( request: TestRunRequest, x_internal_token: Optional[str] = Header(None),):
+@router.post(
+    "/api/internal/test-runs",
+    response_model=TestRunAccepted,
+    status_code=202,
+)
+async def create_test_run_endpoint(
+    request: TestRunRequest,
+    x_internal_token: Optional[str] = Header(None),
+):
 
-    validate_internal_token(x_internal_token)
+    validate_internal_token(
+        x_internal_token
+    )
 
     if not get_config():
 
         raise HTTPException(
             status_code=500,
-            detail="Configurazione dei test assente.",
+            detail=(
+                "Configurazione dei test assente."
+            ),
         )
 
     job_id = create_test_run(request)
@@ -56,21 +67,33 @@ async def create_test_run_endpoint( request: TestRunRequest, x_internal_token: O
     )
 
 
-@router.get( "/api/internal/test-runs/{job_id}" )
-async def get_test_run_endpoint( job_id: str, x_internal_token: Optional[str] = Header(None), ):
+@router.get(
+    "/api/internal/test-runs/{job_id}"
+)
+async def get_test_run_endpoint(
+    job_id: str,
+    x_internal_token: Optional[str] = Header(None),
+):
 
-    validate_internal_token( x_internal_token )
+    validate_internal_token(
+        x_internal_token
+    )
 
     job = get_job(job_id)
+
     if job is None:
 
         raise HTTPException(
             status_code=404,
-            detail=f"Test job '{job_id}' non trovato.",
+            detail=(
+                f"Test job '{job_id}' "
+                "non trovato."
+            ),
         )
 
     response = dict(job)
 
     if job.get("status") == "completed":
         response["report_urls"] = _build_report_urls(job_id)
+
     return response
